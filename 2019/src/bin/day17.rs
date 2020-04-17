@@ -1,9 +1,44 @@
 use aoc2019::aoc_input::get_input;
 use aoc2019::intcode::*;
+use std::convert::{From, Into};
 use std::ops::Index;
 use std::str::FromStr;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+enum Turn {
+    Left,
+    Right,
+}
+
+impl From<Turn> for char {
+    fn from(turn: Turn) -> Self {
+        match turn {
+            Turn::Left => 'L',
+            Turn::Right => 'R',
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+impl Direction {
+    fn turn(self, to: Turn) -> Self {
+        match (self, to) {
+            (Direction::Up, Turn::Right) | (Direction::Down, Turn::Left) => Direction::Right,
+            (Direction::Up, Turn::Left) | (Direction::Down, Turn::Right) => Direction::Left,
+            (Direction::Left, Turn::Right) | (Direction::Right, Turn::Left) => Direction::Up,
+            (Direction::Left, Turn::Left) | (Direction::Right, Turn::Right) => Direction::Down,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 enum Tile {
     OpenSpace,
     Scaffolding,
@@ -14,6 +49,7 @@ type Coordinate = (usize, usize);
 struct Map {
     grid: Vec<Tile>,
     width: usize,
+    robot_loc: (Coordinate, Direction),
 }
 
 impl Map {
@@ -40,14 +76,32 @@ impl FromStr for Map {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut grid = Vec::<Tile>::new();
         let mut width: Option<usize> = None;
+        let mut robot_loc = None;
 
-        for line in s.trim().lines() {
+        for (y, line) in s.trim().lines().enumerate() {
             let mut row = Vec::<Tile>::with_capacity(line.len());
 
-            for c in line.chars() {
+            for (x, c) in line.chars().enumerate() {
+                let coord = (x, y);
                 let tile = match c {
                     '.' => Tile::OpenSpace,
-                    '#' | 'v' | '^' | '<' | '>' => Tile::Scaffolding,
+                    '#' => Tile::Scaffolding,
+                    'v' => {
+                        robot_loc = Some((coord, Direction::Down));
+                        Tile::Scaffolding
+                    }
+                    '^' => {
+                        robot_loc = Some((coord, Direction::Up));
+                        Tile::Scaffolding
+                    }
+                    '<' => {
+                        robot_loc = Some((coord, Direction::Left));
+                        Tile::Scaffolding
+                    }
+                    '>' => {
+                        robot_loc = Some((coord, Direction::Right));
+                        Tile::Scaffolding
+                    }
                     _ => return Err("Invalid character in string"),
                 };
                 row.push(tile);
@@ -67,12 +121,13 @@ impl FromStr for Map {
         Ok(Map {
             grid,
             width: width.unwrap(),
+            robot_loc: robot_loc.unwrap(),
         })
     }
 }
 
-fn sum_alignment_parameters(tape: Tape) -> usize {
-    let mut machine = IntcodeMachine::new(tape);
+fn get_initial_map(tape: &Tape) -> Map {
+    let mut machine = IntcodeMachine::new(tape.clone());
     machine.run_to_completion().unwrap();
     let output: String = machine
         .output
@@ -81,9 +136,10 @@ fn sum_alignment_parameters(tape: Tape) -> usize {
         .map(|n| std::char::from_u32(n as u32).unwrap())
         .collect();
 
-    print!("{}", output);
+    output.parse().unwrap()
+}
 
-    let map: Map = output.parse().unwrap();
+fn sum_alignment_parameters(map: &Map) -> usize {
     let mut alignment = 0usize;
     for y in 1..map.height() - 1 {
         for x in 1..map.width() - 1 {
@@ -107,7 +163,8 @@ fn sum_alignment_parameters(tape: Tape) -> usize {
 fn main() {
     let input = get_input(17);
     let tape = parse_intcode_program(&input);
+    let initial_map = get_initial_map(&tape);
 
-    let alignment = sum_alignment_parameters(tape.clone());
+    let alignment = sum_alignment_parameters(&initial_map);
     println!("Sum of alignment parameters: {}", alignment);
 }
