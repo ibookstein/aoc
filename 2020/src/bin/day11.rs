@@ -1,5 +1,6 @@
 use aoc2020::aoc_input::get_input;
-use aoc2020::grid::{Coord, Delta, Grid};
+use aoc2020::grid::Grid;
+use aoc2020::coordinates::{Coord, Delta};
 use std::convert::TryFrom;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -74,7 +75,7 @@ impl Simulation {
                 Some(Position::Floor) => continue,
                 Some(_) => return Some(coord),
             };
-        };
+        }
         unreachable!();
     }
 

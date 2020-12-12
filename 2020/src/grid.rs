@@ -1,33 +1,6 @@
+use crate::coordinates::Coord;
 use std::convert::{TryFrom, TryInto};
-use std::ops::{Add, AddAssign, Mul};
 use std::str::FromStr;
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub struct Coord(pub isize, pub isize);
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub struct Delta(pub isize, pub isize);
-
-impl Add<Delta> for Coord {
-    type Output = Coord;
-
-    fn add(self, rhs: Delta) -> Self::Output {
-        Coord(self.0 + rhs.0, self.1 + rhs.1)
-    }
-}
-
-impl AddAssign<Delta> for Coord {
-    fn add_assign(&mut self, rhs: Delta) {
-        *self = *self + rhs;
-    }
-}
-
-impl Mul<Delta> for isize {
-    type Output = Delta;
-
-    fn mul(self, rhs: Delta) -> Self::Output {
-        Delta(self * rhs.0, self * rhs.1)
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct Grid<T> {
