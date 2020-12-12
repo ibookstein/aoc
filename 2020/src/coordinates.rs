@@ -39,12 +39,23 @@ impl Direction {
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Coord(pub isize, pub isize);
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub struct Delta(pub isize, pub isize);
-
 impl Coord {
     pub fn origin() -> Coord {
         Coord(0, 0)
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub struct Delta(pub isize, pub isize);
+
+impl Delta {
+    pub fn turn(&self, t: Turn) -> Delta {
+        match t {
+            Turn::Front => *self,
+            Turn::Right => Delta(-self.1, self.0),
+            Turn::Back => Delta(-self.0, -self.1),
+            Turn::Left => Delta(self.1, -self.0),
+        }
     }
 }
 
@@ -57,6 +68,20 @@ impl Add<Delta> for Coord {
 }
 
 impl AddAssign<Delta> for Coord {
+    fn add_assign(&mut self, rhs: Delta) {
+        *self = *self + rhs;
+    }
+}
+
+impl Add<Delta> for Delta {
+    type Output = Delta;
+
+    fn add(self, rhs: Delta) -> Self::Output {
+        Delta(self.0 + rhs.0, self.1 + rhs.1)
+    }
+}
+
+impl AddAssign<Delta> for Delta {
     fn add_assign(&mut self, rhs: Delta) {
         *self = *self + rhs;
     }

@@ -32,47 +32,76 @@ impl FromStr for Instruction {
     }
 }
 
+#[derive(Debug)]
 struct Simulation {
     dir: Direction,
-    pos: Coord,
+    ship: Coord,
+    waypoint: Delta,
 }
 
 impl Simulation {
     fn new() -> Simulation {
         Simulation {
             dir: Direction::Right,
-            pos: Coord::origin(),
+            ship: Coord::origin(),
+            waypoint: Delta(10, -1),
         }
     }
 
-    fn turn(&mut self, t: Turn) {
+    fn ship_turn(&mut self, t: Turn) {
         self.dir = self.dir.turn(t);
     }
 
-    fn dir_move(&mut self, dir: Direction, distance: isize) {
-        self.pos += distance * Delta::from(dir);
+    fn ship_move(&mut self, dir: Direction, distance: isize) {
+        self.ship += distance * Delta::from(dir);
     }
 
-    fn forward(&mut self, distance: isize) {
-        self.dir_move(self.dir, distance);
+    fn ship_forward(&mut self, distance: isize) {
+        self.ship_move(self.dir, distance);
     }
 
-    fn run(&mut self, insn: Instruction) {
+    fn ship_run(&mut self, insn: Instruction) {
         match insn {
-            Instruction::Forward(n) => self.forward(n),
-            Instruction::Turn(t) => self.turn(t),
-            Instruction::Move(d, n) => self.dir_move(d, n),
+            Instruction::Forward(n) => self.ship_forward(n),
+            Instruction::Turn(t) => self.ship_turn(t),
+            Instruction::Move(d, n) => self.ship_move(d, n),
         };
     }
 
-    fn run_multiple(&mut self, insns: &[Instruction]) {
+    fn ship_run_all(&mut self, insns: &[Instruction]) {
         for insn in insns {
-            self.run(*insn);
+            self.ship_run(*insn);
+        }
+    }
+
+    fn waypoint_turn(&mut self, t: Turn) {
+        self.waypoint = self.waypoint.turn(t);
+    }
+
+    fn waypoint_move(&mut self, dir: Direction, distance: isize) {
+        self.waypoint += distance * Delta::from(dir);
+    }
+
+    fn waypoint_forward(&mut self, distance: isize) {
+        self.ship += distance * self.waypoint;
+    }
+
+    fn waypoint_run(&mut self, insn: Instruction) {
+        match insn {
+            Instruction::Forward(n) => self.waypoint_forward(n),
+            Instruction::Turn(t) => self.waypoint_turn(t),
+            Instruction::Move(d, n) => self.waypoint_move(d, n),
+        };
+    }
+
+    fn waypoint_run_all(&mut self, insns: &[Instruction]) {
+        for insn in insns {
+            self.waypoint_run(*insn);
         }
     }
 
     fn distance_from_origin(&self) -> isize {
-        manhattan_distance(self.pos, Coord::origin())
+        manhattan_distance(self.ship, Coord::origin())
     }
 }
 
@@ -80,7 +109,11 @@ fn main() {
     let input = get_input(12);
     let insns: Vec<Instruction> = input.lines().map(|line| line.parse().unwrap()).collect();
 
-    let mut sim = Simulation::new();
-    sim.run_multiple(&insns);
-    dbg!(sim.distance_from_origin());
+    let mut sim1 = Simulation::new();
+    sim1.ship_run_all(&insns);
+    dbg!(sim1.distance_from_origin());
+
+    let mut sim2 = Simulation::new();
+    sim2.waypoint_run_all(&insns);
+    dbg!(sim2.distance_from_origin());
 }
