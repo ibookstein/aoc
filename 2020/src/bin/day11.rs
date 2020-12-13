@@ -1,6 +1,6 @@
 use aoc2020::aoc_input::get_input;
-use aoc2020::grid::Grid;
 use aoc2020::coordinates::{Coord, Delta};
+use aoc2020::grid::Grid;
 use std::convert::TryFrom;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
