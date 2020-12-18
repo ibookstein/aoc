@@ -11,6 +11,13 @@ struct Ticket {
     fields: Vec<usize>,
 }
 
+impl Ticket {
+    fn check(&self, index: usize, ranges: &[PropRange]) -> bool {
+        let field = self.fields[index];
+        ranges.iter().any(|r| r.contains(&field))
+    }
+}
+
 #[derive(Debug)]
 struct Info {
     props: PropMap,
@@ -64,14 +71,58 @@ fn main() {
     let flat_props: Vec<_> = info.props.values().flatten().collect();
     let mut valid_tickets = Vec::<&Ticket>::new();
     let mut error_rate = 0usize;
-    for ticket in &info.tickets {
+    'outer: for ticket in &info.tickets {
         for field in &ticket.fields {
             if flat_props.iter().copied().all(|p| !p.contains(&field)) {
                 error_rate += field;
-            } else {
-                valid_tickets.push(ticket);
+                continue 'outer;
             }
         }
+        valid_tickets.push(ticket);
     }
     dbg!(error_rate);
+
+    let valid_tickets = valid_tickets;
+    assert!(valid_tickets
+        .iter()
+        .copied()
+        .all(|t| t.fields.len() == info.props.len()));
+
+    let mut possible_assignments = Vec::new();
+    for (name, ranges) in info.props.iter() {
+        let mut cur_assignments = Vec::<usize>::new();
+        for i in 0..info.props.len() {
+            if !valid_tickets.iter().copied().all(|t| t.check(i, ranges)) {
+                continue;
+            }
+
+            cur_assignments.push(i);
+        }
+        possible_assignments.push((name, cur_assignments));
+    }
+
+    let mut assignments = HashMap::new();
+    while !possible_assignments.is_empty() {
+        let pos = possible_assignments
+            .iter()
+            .position(|(_, inds)| inds.len() == 1)
+            .unwrap();
+
+        let (name, inds) = possible_assignments.remove(pos);
+        let ind = inds[0];
+        for (_, inds) in possible_assignments.iter_mut() {
+            if let Some(pos) = inds.iter().position(|i| *i == ind) {
+                inds.swap_remove(pos);
+            }
+        }
+        assignments.insert(name, ind);
+    }
+
+    let mut product = 1usize;
+    for (name, ind) in assignments.iter() {
+        if name.starts_with("departure") {
+            product *= info.my_ticket.fields[*ind];
+        }
+    }
+    dbg!(product);
 }
