@@ -109,3 +109,43 @@ impl From<Direction> for Delta {
 pub fn manhattan_distance(lhs: Coord, rhs: Coord) -> isize {
     (lhs.0 - rhs.0).abs() + (lhs.1 - rhs.1).abs()
 }
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+pub struct Coord3(pub isize, pub isize, pub isize);
+
+impl Coord3 {
+    pub fn origin() -> Coord3 {
+        Coord3(0, 0, 0)
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub struct Delta3(pub isize, pub isize, pub isize);
+
+impl Add<Delta3> for Coord3 {
+    type Output = Coord3;
+
+    fn add(self, rhs: Delta3) -> Self::Output {
+        Coord3(self.0 + rhs.0, self.1 + rhs.1, self.2 + rhs.2)
+    }
+}
+
+impl AddAssign<Delta3> for Coord3 {
+    fn add_assign(&mut self, rhs: Delta3) {
+        *self = *self + rhs;
+    }
+}
+
+impl Add<Delta3> for Delta3 {
+    type Output = Delta3;
+
+    fn add(self, rhs: Delta3) -> Self::Output {
+        Delta3(self.0 + rhs.0, self.1 + rhs.1, self.2 + rhs.2)
+    }
+}
+
+impl AddAssign<Delta3> for Delta3 {
+    fn add_assign(&mut self, rhs: Delta3) {
+        *self = *self + rhs;
+    }
+}
