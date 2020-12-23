@@ -110,42 +110,58 @@ pub fn manhattan_distance(lhs: Coord, rhs: Coord) -> isize {
     (lhs.0 - rhs.0).abs() + (lhs.1 - rhs.1).abs()
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-pub struct Coord3(pub isize, pub isize, pub isize);
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+pub struct CoordN(Vec<isize>);
 
-impl Coord3 {
-    pub fn origin() -> Coord3 {
-        Coord3(0, 0, 0)
+impl CoordN {
+    pub fn origin(n: usize) -> CoordN {
+        CoordN(vec![0; n])
+    }
+
+    pub fn from_vec(v: Vec<isize>) -> CoordN {
+        CoordN(v)
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub struct Delta3(pub isize, pub isize, pub isize);
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct DeltaN(Vec<isize>);
 
-impl Add<Delta3> for Coord3 {
-    type Output = Coord3;
-
-    fn add(self, rhs: Delta3) -> Self::Output {
-        Coord3(self.0 + rhs.0, self.1 + rhs.1, self.2 + rhs.2)
+impl DeltaN {
+    pub fn from_vec(v: Vec<isize>) -> DeltaN {
+        DeltaN(v)
     }
 }
 
-impl AddAssign<Delta3> for Coord3 {
-    fn add_assign(&mut self, rhs: Delta3) {
-        *self = *self + rhs;
+impl<'a, 'b> Add<&'b DeltaN> for &'a CoordN {
+    type Output = CoordN;
+
+    fn add(self, rhs: &'b DeltaN) -> Self::Output {
+        let n = self.0.len();
+        assert_eq!(n, rhs.0.len());
+        let res: Vec<_> = (0..n).map(|i| self.0[i] + rhs.0[i]).collect();
+        CoordN(res)
     }
 }
 
-impl Add<Delta3> for Delta3 {
-    type Output = Delta3;
-
-    fn add(self, rhs: Delta3) -> Self::Output {
-        Delta3(self.0 + rhs.0, self.1 + rhs.1, self.2 + rhs.2)
+impl<'a> AddAssign<&'a DeltaN> for CoordN {
+    fn add_assign(&mut self, rhs: &'a DeltaN) {
+        *self = &*self + rhs;
     }
 }
 
-impl AddAssign<Delta3> for Delta3 {
-    fn add_assign(&mut self, rhs: Delta3) {
-        *self = *self + rhs;
+impl<'a, 'b> Add<&'b DeltaN> for &'a DeltaN {
+    type Output = DeltaN;
+
+    fn add(self, rhs: &'b DeltaN) -> Self::Output {
+        let n = self.0.len();
+        assert_eq!(n, rhs.0.len());
+        let res: Vec<_> = (0..n).map(|i| self.0[i] + rhs.0[i]).collect();
+        DeltaN(res)
+    }
+}
+
+impl<'a> AddAssign<&'a DeltaN> for DeltaN {
+    fn add_assign(&mut self, rhs: &'a DeltaN) {
+        *self = &*self + rhs;
     }
 }
