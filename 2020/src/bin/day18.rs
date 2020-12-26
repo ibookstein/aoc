@@ -84,19 +84,19 @@ impl<'a> Iterator for Lexer<'a> {
             ')' => {
                 self.next_ch();
                 Token::RParen
-            },
+            }
             '+' => {
                 self.next_ch();
                 Token::Plus
-            },
+            }
             '*' => {
                 self.next_ch();
                 Token::Asterisk
-            },
+            }
             _ => {
                 self.next_ch();
                 Token::Unexpected
-            },
+            }
         };
         Some(t)
     }
@@ -110,12 +110,14 @@ enum AstNode {
 }
 
 struct Parser<'a> {
-    tokens: std::iter::Peekable<Lexer<'a>>
+    tokens: std::iter::Peekable<Lexer<'a>>,
 }
 
 impl<'a> Parser<'a> {
     fn new(lexer: Lexer<'a>) -> Parser<'a> {
-        Parser { tokens: lexer.peekable() }
+        Parser {
+            tokens: lexer.peekable(),
+        }
     }
 
     fn parse_expr_rparen(&mut self) -> AstNode {
@@ -155,7 +157,45 @@ impl<'a> Parser<'a> {
                 _ => unreachable!(),
             };
         }
+        node
+    }
 
+    fn parse_expr2_rparen(&mut self) -> AstNode {
+        let expr = self.parse_expr2();
+        match self.tokens.next().unwrap() {
+            Token::RParen => (),
+            _ => panic!("Syntax error"),
+        };
+        expr
+    }
+
+    fn parse_term2(&mut self) -> AstNode {
+        match self.tokens.next().unwrap() {
+            Token::LParen => self.parse_expr2_rparen(),
+            Token::Num(n) => AstNode::Number(n),
+            _ => panic!("Syntax error"),
+        }
+    }
+
+    fn parse_factor2(&mut self) -> AstNode {
+        let mut node = self.parse_term2();
+        while let Some(&Token::Plus) = self.tokens.peek() {
+            self.tokens.next().unwrap();
+            let rhs = Box::new(self.parse_term2());
+            let lhs = Box::new(node);
+            node = AstNode::Add(lhs, rhs);
+        }
+        node
+    }
+
+    fn parse_expr2(&mut self) -> AstNode {
+        let mut node = self.parse_factor2();
+        while let Some(&Token::Asterisk) = self.tokens.peek() {
+            self.tokens.next().unwrap();
+            let rhs = Box::new(self.parse_factor2());
+            let lhs = Box::new(node);
+            node = AstNode::Multiply(lhs, rhs);
+        }
         node
     }
 }
@@ -170,12 +210,20 @@ fn eval(node: &AstNode) -> u64 {
 
 fn main() {
     let input = get_input(18);
-    let mut total = 0u64;
+
+    let mut total1 = 0u64;
+    let mut total2 = 0u64;
     for line in input.lines() {
         let lexer = Lexer::new(line);
         let mut parser = Parser::new(lexer);
         let expr = parser.parse_expr();
-        total += eval(&expr);
+        total1 += eval(&expr);
+
+        let lexer = Lexer::new(line);
+        let mut parser = Parser::new(lexer);
+        let expr = parser.parse_expr2();
+        total2 += eval(&expr);
     }
-    dbg!(total);
+    dbg!(total1);
+    dbg!(total2);
 }
