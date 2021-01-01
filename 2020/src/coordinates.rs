@@ -36,7 +36,7 @@ impl Direction {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub struct Coord(pub isize, pub isize);
 
 impl Coord {

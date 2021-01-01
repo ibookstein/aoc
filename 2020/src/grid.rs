@@ -2,6 +2,31 @@ use crate::coordinates::Coord;
 use std::convert::{TryFrom, TryInto};
 use std::str::FromStr;
 
+#[derive(Debug, Clone, Copy)]
+pub enum Axis {
+    Horizontal,
+    Vertical,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum Rotation {
+    Cw0,
+    Cw90,
+    Cw180,
+    Cw270,
+}
+
+impl Rotation {
+    pub fn to_cw_count(&self) -> usize {
+        match *self {
+            Rotation::Cw0 => 0,
+            Rotation::Cw90 => 1,
+            Rotation::Cw180 => 2,
+            Rotation::Cw270 => 3,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Grid<T> {
     grid: Vec<T>,
@@ -44,6 +69,57 @@ impl<T> Grid<T> {
     pub fn get_mut(&mut self, c: Coord) -> Option<&mut T> {
         let idx = self.index_for(c)?;
         self.grid.get_mut(idx)
+    }
+
+    pub fn flip_inplace(&mut self, axis: Axis) {
+        let w = self.width() as isize;
+        let h = self.height() as isize;
+        match axis {
+            Axis::Horizontal => {
+                for y in 0..h / 2 {
+                    for x in 0..w {
+                        let i1 = self.index_for(Coord(x, y)).unwrap();
+                        let i2 = self.index_for(Coord(x, h - 1 - y)).unwrap();
+                        self.grid.swap(i1, i2);
+                    }
+                }
+            }
+            Axis::Vertical => {
+                for x in 0..w / 2 {
+                    for y in 0..h {
+                        let i1 = self.index_for(Coord(x, y)).unwrap();
+                        let i2 = self.index_for(Coord(w - 1 - x, y)).unwrap();
+                        self.grid.swap(i1, i2);
+                    }
+                }
+            }
+        }
+    }
+}
+
+impl<T> Grid<T>
+where
+    T: Clone,
+{
+    pub fn rotate_clockwise_inplace(&mut self) {
+        let w = self.width() as isize;
+        let h = self.height() as isize;
+        let mut v = Vec::with_capacity(self.grid.len());
+
+        for x in 0..w {
+            for y in (0..h).rev() {
+                v.push(self.get(Coord(x, y)).unwrap().clone());
+            }
+        }
+
+        self.grid = v;
+        self.width = h as usize;
+    }
+
+    pub fn rotate_inplace(&mut self, rotation: Rotation) {
+        for _ in 0..rotation.to_cw_count() {
+            self.rotate_clockwise_inplace();
+        }
     }
 }
 
