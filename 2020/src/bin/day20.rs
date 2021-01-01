@@ -1,5 +1,5 @@
 use aoc2020::aoc_input::get_input;
-use aoc2020::coordinates::Coord;
+use aoc2020::coordinates::{Coord, Delta};
 use aoc2020::grid::{Axis, Grid, Rotation};
 use std::collections::{HashMap, HashSet};
 
@@ -171,6 +171,11 @@ impl ArrangeCtx {
         self.tile_locs_ymax = self.tile_locs_ymax.max(coord.1);
     }
 
+    fn get_tile_by_loc(&self, coord: Coord) -> &Tile {
+        let tile_id = self.tile_locs.get(&coord).unwrap();
+        self.tile_map.get(tile_id).unwrap()
+    }
+
     fn align_corner(&mut self, id: usize) {
         let tile = self.tile_map.get(&id).unwrap();
         let top_boundary = self.is_boundary(&tile.top);
@@ -324,15 +329,155 @@ impl ArrangeCtx {
             .map(|c| self.tile_locs.get(c).unwrap())
             .product()
     }
+
+    fn tile_interior_dims(&self) -> (usize, usize) {
+        let tile = self.get_tile_by_loc(Coord::origin());
+        (tile.interior.width(), tile.interior.height())
+    }
+
+    fn image(&self) -> Grid<char> {
+        let (tw, th) = self.tile_interior_dims();
+        let tile_count = (self.tile_locs_xmax + 1) * (self.tile_locs_ymax + 1);
+        let capacity = tw * th * (tile_count as usize);
+
+        let mut s = String::with_capacity(capacity);
+        for outer_y in 0..=self.tile_locs_ymax {
+            for inner_y in 0..th as isize {
+                for outer_x in 0..=self.tile_locs_xmax {
+                    for inner_x in 0..tw as isize {
+                        let tile_coord = Coord(outer_x, outer_y);
+                        let tile = self.get_tile_by_loc(tile_coord);
+                        let interior_coord = Coord(inner_x, inner_y);
+                        let ch = tile.interior.get(interior_coord);
+                        s.push(*ch.unwrap());
+                    }
+                }
+                s.push('\n');
+            }
+        }
+
+        s.parse().unwrap()
+    }
+}
+
+fn get_mask_deltas() -> Vec<Delta> {
+    let mask_str = "                  # \n#    ##    ##    ###\n #  #  #  #  #  #   ";
+    let mask: Grid<char> = mask_str.parse().unwrap();
+
+    let mut deltas = Vec::new();
+    for y in 0..mask.height() as isize {
+        for x in 0..mask.width() as isize {
+            if *mask.get(Coord(x, y)).unwrap() == '#' {
+                deltas.push(Delta(x, y));
+            }
+        }
+    }
+    deltas
+}
+
+fn image_mask_remove(image: &mut Grid<char>, mask: &[Delta]) -> bool {
+    let mut ret = false;
+
+    for y in 0..image.height() as isize {
+        for x in 0..image.width() as isize {
+            let base = Coord(x, y);
+            if !mask.iter().all(|d| image.get(base + *d) == Some(&'#')) {
+                continue;
+            }
+
+            for d in mask {
+                *image.get_mut(base + *d).unwrap() = ' ';
+            }
+            ret = true;
+        }
+    }
+
+    ret
+}
+
+fn mask_out_image(mut image: &mut Grid<char>) {
+    let mut symmetry_count = 0;
+    let mask_deltas = get_mask_deltas();
+
+    while !image_mask_remove(&mut image, &mask_deltas) {
+        assert_ne!(symmetry_count, 8);
+
+        image.rotate_clockwise_inplace();
+        symmetry_count += 1;
+
+        if symmetry_count == 4 {
+            image.flip_inplace(Axis::Horizontal);
+        }
+    }
+}
+
+fn parse_input(input: &str) -> Vec<Tile> {
+    let lines: Vec<_> = input[..input.len() - 1].lines().collect();
+    let groups: Vec<_> = lines.split(|line| line.is_empty()).collect();
+    groups.iter().copied().map(parse_tile).collect()
 }
 
 fn main() {
     let input = get_input(20);
-    let lines: Vec<_> = input[..input.len() - 1].lines().collect();
-    let groups: Vec<_> = lines.split(|line| line.is_empty()).collect();
 
-    let tiles: Vec<_> = groups.iter().copied().map(parse_tile).collect();
+    let tiles = parse_input(&input);
     let mut ctx = ArrangeCtx::new(tiles);
     ctx.solve_puzzle();
     dbg!(ctx.corner_product());
+
+    let mut image = ctx.image();
+    mask_out_image(&mut image);
+    let roughness = image.count_eq(&'#');
+    dbg!(roughness);
+}
+
+#[cfg(test)]
+mod tests {
+    use std::assert_eq;
+
+    use super::*;
+
+    fn test_input() -> ArrangeCtx {
+        let tiles = parse_input(include_str!("day20_test_tiles.txt"));
+        ArrangeCtx::new(tiles)
+    }
+
+    fn test_image() -> Grid<char> {
+        include_str!("day20_test_image.txt").parse().unwrap()
+    }
+
+    #[test]
+    fn test_corner_product() {
+        let mut ctx = test_input();
+        ctx.solve_puzzle();
+        assert_eq!(ctx.corner_product(), 20899048083289);
+    }
+
+    #[test]
+    fn test_arrangement() {
+        let mut ctx = test_input();
+        ctx.solve_puzzle();
+        let mut actual_image = ctx.image();
+        let expected_image = test_image();
+
+        let mut symmetry_count = 0;
+        while expected_image != actual_image {
+            assert_ne!(symmetry_count, 8);
+
+            actual_image.rotate_clockwise_inplace();
+            symmetry_count += 1;
+
+            if symmetry_count == 4 {
+                actual_image.flip_inplace(Axis::Horizontal);
+            }
+        }
+    }
+
+    #[test]
+    fn check_mask_out_image() {
+        let mut image = test_image();
+        mask_out_image(&mut image);
+        let roughness = image.count_eq(&'#');
+        assert_eq!(roughness, 273);
+    }
 }

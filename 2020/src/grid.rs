@@ -1,6 +1,7 @@
 use crate::coordinates::Coord;
 use std::convert::{TryFrom, TryInto};
 use std::str::FromStr;
+use std::string::ToString;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Axis {
@@ -27,7 +28,7 @@ impl Rotation {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Grid<T> {
     grid: Vec<T>,
     width: usize,
@@ -99,6 +100,15 @@ impl<T> Grid<T> {
 
 impl<T> Grid<T>
 where
+    T: std::cmp::PartialEq,
+{
+    pub fn count_eq(&self, item: &T) -> usize {
+        self.grid.iter().filter(|&e| e == item).count()
+    }
+}
+
+impl<T> Grid<T>
+where
     T: Clone,
 {
     pub fn rotate_clockwise_inplace(&mut self) {
@@ -154,5 +164,23 @@ where
 
         let width = width.ok_or("No lines")?;
         Ok(Grid { grid, width })
+    }
+}
+
+impl<T> ToString for Grid<T>
+where
+    T: Clone,
+    char: From<T>,
+{
+    fn to_string(&self) -> String {
+        let mut s = String::with_capacity(self.grid.len());
+        for y in 0..self.height() as isize {
+            for x in 0..self.width() as isize {
+                let e = self.get(Coord(x, y)).unwrap();
+                s.push(char::from(e.clone()))
+            }
+            s.push('\n');
+        }
+        s
     }
 }
