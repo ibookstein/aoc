@@ -24,7 +24,6 @@ impl TryFrom<char> for GridPoint {
 
 #[derive(Debug)]
 struct PocketDim {
-    dims: usize,
     dirs: Vec<DeltaN>,
     active: HashSet<CoordN>,
 }
@@ -47,7 +46,7 @@ impl PocketDim {
                 }
             }
         }
-        PocketDim { dims, dirs, active }
+        PocketDim { dirs, active }
     }
 
     fn dirs(dims: usize) -> Vec<DeltaN> {

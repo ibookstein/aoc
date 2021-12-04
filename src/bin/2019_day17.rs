@@ -1,42 +1,7 @@
 use aoc::aoc_input::get_input;
 use aoc::intcode::*;
-use std::convert::From;
 use std::ops::Index;
 use std::str::FromStr;
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-enum Turn {
-    Left,
-    Right,
-}
-
-impl From<Turn> for char {
-    fn from(turn: Turn) -> Self {
-        match turn {
-            Turn::Left => 'L',
-            Turn::Right => 'R',
-        }
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-impl Direction {
-    fn turn(self, to: Turn) -> Self {
-        match (self, to) {
-            (Direction::Up, Turn::Right) | (Direction::Down, Turn::Left) => Direction::Right,
-            (Direction::Up, Turn::Left) | (Direction::Down, Turn::Right) => Direction::Left,
-            (Direction::Left, Turn::Right) | (Direction::Right, Turn::Left) => Direction::Up,
-            (Direction::Left, Turn::Left) | (Direction::Right, Turn::Right) => Direction::Down,
-        }
-    }
-}
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 enum Tile {
@@ -49,7 +14,6 @@ type Coordinate = (usize, usize);
 struct Map {
     grid: Vec<Tile>,
     width: usize,
-    robot_loc: (Coordinate, Direction),
 }
 
 impl Map {
@@ -76,32 +40,18 @@ impl FromStr for Map {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut grid = Vec::<Tile>::new();
         let mut width: Option<usize> = None;
-        let mut robot_loc = None;
 
-        for (y, line) in s.trim().lines().enumerate() {
+        for line in s.trim().lines() {
             let mut row = Vec::<Tile>::with_capacity(line.len());
 
-            for (x, c) in line.chars().enumerate() {
-                let coord = (x, y);
+            for c in line.chars() {
                 let tile = match c {
                     '.' => Tile::OpenSpace,
                     '#' => Tile::Scaffolding,
-                    'v' => {
-                        robot_loc = Some((coord, Direction::Down));
-                        Tile::Scaffolding
-                    }
-                    '^' => {
-                        robot_loc = Some((coord, Direction::Up));
-                        Tile::Scaffolding
-                    }
-                    '<' => {
-                        robot_loc = Some((coord, Direction::Left));
-                        Tile::Scaffolding
-                    }
-                    '>' => {
-                        robot_loc = Some((coord, Direction::Right));
-                        Tile::Scaffolding
-                    }
+                    'v' => Tile::Scaffolding,
+                    '^' => Tile::Scaffolding,
+                    '<' => Tile::Scaffolding,
+                    '>' => Tile::Scaffolding,
                     _ => return Err("Invalid character in string"),
                 };
                 row.push(tile);
@@ -121,7 +71,6 @@ impl FromStr for Map {
         Ok(Map {
             grid,
             width: width.unwrap(),
-            robot_loc: robot_loc.unwrap(),
         })
     }
 }
