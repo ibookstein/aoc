@@ -35,6 +35,10 @@ pub struct Grid<T> {
 }
 
 impl<T> Grid<T> {
+    pub fn from_vec_and_width(grid: Vec<T>, width: usize) -> Self {
+        Self { grid, width }
+    }
+
     pub fn height(&self) -> usize {
         self.grid.len() / self.width
     }
@@ -45,6 +49,10 @@ impl<T> Grid<T> {
 
     pub fn iter(&self) -> impl Iterator<Item = &T> {
         self.grid.iter()
+    }
+
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
+        self.grid.iter_mut()
     }
 
     fn index_for(&self, c: Coord) -> Option<usize> {
