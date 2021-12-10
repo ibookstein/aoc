@@ -1,6 +1,7 @@
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use std::convert::{From, TryFrom};
 use std::ops::{Add, AddAssign, Mul};
+use strum_macros::EnumIter;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, IntoPrimitive, TryFromPrimitive)]
 #[repr(u8)]
@@ -20,7 +21,7 @@ impl Mul<Turn> for isize {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, IntoPrimitive, TryFromPrimitive)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, EnumIter, IntoPrimitive, TryFromPrimitive)]
 #[repr(u8)]
 pub enum Direction {
     Up = 0,
