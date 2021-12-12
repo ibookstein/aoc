@@ -1,5 +1,6 @@
 use crate::coordinates::Coord;
 use std::convert::{TryFrom, TryInto};
+use std::iter::FusedIterator;
 use std::str::FromStr;
 use std::string::ToString;
 
@@ -28,6 +29,82 @@ impl Rotation {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct GridIter<'a, T: 'a> {
+    iter: std::slice::Iter<'a, T>,
+    width: usize,
+    coord: Coord,
+}
+
+impl<'a, T> GridIter<'a, T> {
+    pub fn new(grid: &'a Grid<T>) -> Self {
+        Self {
+            iter: grid.grid.iter(),
+            width: grid.width,
+            coord: Coord::origin(),
+        }
+    }
+}
+
+impl<'a, T> Iterator for GridIter<'a, T> {
+    type Item = (Coord, &'a T);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let res = (self.coord, self.iter.next()?);
+        if self.coord.0 as usize == self.width - 1 {
+            self.coord.0 = 0;
+            self.coord.1 += 1;
+        } else {
+            self.coord.0 += 1;
+        }
+        Some(res)
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+}
+
+impl<'a, T> FusedIterator for GridIter<'a, T> {}
+
+#[derive(Debug)]
+pub struct GridIterMut<'a, T: 'a> {
+    iter: std::slice::IterMut<'a, T>,
+    width: usize,
+    coord: Coord,
+}
+
+impl<'a, T> GridIterMut<'a, T> {
+    pub fn new(grid: &'a mut Grid<T>) -> Self {
+        Self {
+            iter: grid.grid.iter_mut(),
+            width: grid.width,
+            coord: Coord::origin(),
+        }
+    }
+}
+
+impl<'a, T> Iterator for GridIterMut<'a, T> {
+    type Item = (Coord, &'a mut T);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let res = (self.coord, self.iter.next()?);
+        if self.coord.0 as usize == self.width - 1 {
+            self.coord.0 = 0;
+            self.coord.1 += 1;
+        } else {
+            self.coord.0 += 1;
+        }
+        Some(res)
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+}
+
+impl<'a, T> FusedIterator for GridIterMut<'a, T> {}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Grid<T> {
     grid: Vec<T>,
@@ -47,11 +124,19 @@ impl<T> Grid<T> {
         self.width
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &T> {
+    pub fn iter(&self) -> impl Iterator<Item = (Coord, &T)> {
+        GridIter::new(self)
+    }
+
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = (Coord, &mut T)> {
+        GridIterMut::new(self)
+    }
+
+    pub fn values(&self) -> impl Iterator<Item = &T> {
         self.grid.iter()
     }
 
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
+    pub fn values_mut(&mut self) -> impl Iterator<Item = &mut T> {
         self.grid.iter_mut()
     }
 
@@ -111,7 +196,7 @@ where
     T: std::cmp::PartialEq,
 {
     pub fn count_eq(&self, item: &T) -> usize {
-        self.grid.iter().filter(|&e| e == item).count()
+        self.values().filter(|&e| e == item).count()
     }
 }
 

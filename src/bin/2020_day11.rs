@@ -142,7 +142,7 @@ impl Simulation {
     }
 
     fn count_of(&self, p: Position) -> usize {
-        self.grid.iter().filter(|pos| **pos == p).count()
+        self.grid.values().filter(|pos| **pos == p).count()
     }
 }
 

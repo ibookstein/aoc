@@ -61,7 +61,7 @@ impl BingoBoard {
             return MarkResult::AlreadyWon;
         }
 
-        for cell in self.grid.iter_mut().filter(|(num, _)| *num == n) {
+        for cell in self.grid.values_mut().filter(|(num, _)| *num == n) {
             cell.1 = Mark::Marked;
         }
         self.last_called = Some(n);
@@ -97,7 +97,7 @@ impl BingoBoard {
     fn score(&self) -> u32 {
         let unmarked_sum = self
             .grid
-            .iter()
+            .values()
             .filter_map(|(n, m)| match m {
                 Mark::Unmarked => Some(*n as u32),
                 Mark::Marked => None,
