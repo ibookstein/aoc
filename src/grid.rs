@@ -132,6 +132,10 @@ impl<T> Grid<T> {
         GridIterMut::new(self)
     }
 
+    pub fn len(&self) -> usize {
+        self.grid.len()
+    }
+
     pub fn values(&self) -> impl Iterator<Item = &T> {
         self.grid.iter()
     }

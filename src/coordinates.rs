@@ -37,6 +37,18 @@ impl Direction {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
+pub enum Direction8 {
+    North,
+    NorthEast,
+    East,
+    SouthEast,
+    South,
+    SouthWest,
+    West,
+    NorthWest,
+}
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub struct Coord(pub isize, pub isize);
 
@@ -103,6 +115,21 @@ impl From<Direction> for Delta {
             Direction::Down => Delta(0, 1),
             Direction::Left => Delta(-1, 0),
             Direction::Right => Delta(1, 0),
+        }
+    }
+}
+
+impl From<Direction8> for Delta {
+    fn from(d: Direction8) -> Self {
+        match d {
+            Direction8::North => Delta(0, -1),
+            Direction8::NorthEast => Delta(1, -1),
+            Direction8::East => Delta(1, 0),
+            Direction8::SouthEast => Delta(1, 1),
+            Direction8::South => Delta(0, 1),
+            Direction8::SouthWest => Delta(-1, 1),
+            Direction8::West => Delta(-1, 0),
+            Direction8::NorthWest => Delta(-1, -1),
         }
     }
 }
