@@ -1,8 +1,8 @@
 use crate::coordinates::Coord;
 use std::convert::{TryFrom, TryInto};
+use std::fmt::{Display, Write};
 use std::iter::FusedIterator;
 use std::str::FromStr;
-use std::string::ToString;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Axis {
@@ -111,8 +111,20 @@ pub struct Grid<T> {
     width: usize,
 }
 
+impl<T> Grid<T>
+where
+    T: Default,
+{
+    pub fn new(width: usize, height: usize) -> Self {
+        let mut grid = Vec::new();
+        grid.resize_with(width * height, Default::default);
+        Self { grid, width }
+    }
+}
+
 impl<T> Grid<T> {
     pub fn from_vec_and_width(grid: Vec<T>, width: usize) -> Self {
+        assert_eq!(grid.len() % width, 0);
         Self { grid, width }
     }
 
@@ -264,20 +276,19 @@ where
     }
 }
 
-impl<T> ToString for Grid<T>
+impl<T> Display for Grid<T>
 where
     T: Clone,
     char: From<T>,
 {
-    fn to_string(&self) -> String {
-        let mut s = String::with_capacity(self.grid.len());
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
         for y in 0..self.height() as isize {
             for x in 0..self.width() as isize {
                 let e = self.get(Coord(x, y)).unwrap();
-                s.push(char::from(e.clone()))
+                fmt.write_char(char::from(e.clone()))?;
             }
-            s.push('\n');
+            fmt.write_char('\n')?;
         }
-        s
+        Ok(())
     }
 }
