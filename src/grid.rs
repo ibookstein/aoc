@@ -136,6 +136,14 @@ impl<T> Grid<T> {
         self.width
     }
 
+    pub fn len(&self) -> usize {
+        self.grid.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() != 0
+    }
+
     pub fn iter(&self) -> impl Iterator<Item = (Coord, &T)> {
         GridIter::new(self)
     }
@@ -144,8 +152,8 @@ impl<T> Grid<T> {
         GridIterMut::new(self)
     }
 
-    pub fn len(&self) -> usize {
-        self.grid.len()
+    pub fn keys<'a>(&'a self) -> impl Iterator<Item = Coord> + 'a {
+        self.iter().map(|(c, _)| c)
     }
 
     pub fn values(&self) -> impl Iterator<Item = &T> {
