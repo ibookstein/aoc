@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 bimap = "0.6.1"
 bitreader = "0.3.4"
+bitvec = "0.22.3"
 hex = "0.4.3"
 itermore = "0.1.0"
 itertools = "0.10.3"
