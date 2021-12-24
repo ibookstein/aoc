@@ -1,5 +1,5 @@
 use aoc::aoc_input::get_input;
-use aoc::coordinates::{Coord, CoordN, DeltaN};
+use aoc::coordinates::{Coord, CoordVec, DeltaVec};
 use aoc::grid::Grid;
 use std::collections::HashSet;
 use std::convert::TryFrom;
@@ -24,8 +24,8 @@ impl TryFrom<char> for GridPoint {
 
 #[derive(Debug)]
 struct PocketDim {
-    dirs: Vec<DeltaN>,
-    active: HashSet<CoordN>,
+    dirs: Vec<DeltaVec>,
+    active: HashSet<CoordVec>,
 }
 
 impl PocketDim {
@@ -42,20 +42,20 @@ impl PocketDim {
                     let mut vec = vec![0isize; dims];
                     vec[0] = x as isize;
                     vec[1] = y as isize;
-                    active.insert(CoordN::from_vec(vec));
+                    active.insert(CoordVec::from_vec(vec));
                 }
             }
         }
         PocketDim { dirs, active }
     }
 
-    fn dirs(dims: usize) -> Vec<DeltaN> {
+    fn dirs(dims: usize) -> Vec<DeltaVec> {
         let mut digits = vec![-1isize; dims];
-        let mut dirs = Vec::<DeltaN>::with_capacity(3usize.pow(dims as u32) - 1);
+        let mut dirs = Vec::<DeltaVec>::with_capacity(3usize.pow(dims as u32) - 1);
 
         loop {
             if digits.iter().any(|d| *d != 0) {
-                dirs.push(DeltaN::from_vec(digits.clone()));
+                dirs.push(DeltaVec::from_vec(digits.clone()));
             }
 
             if digits.iter().all(|d| *d == 1) {

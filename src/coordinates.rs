@@ -139,57 +139,57 @@ pub fn manhattan_distance(lhs: Coord, rhs: Coord) -> isize {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
-pub struct CoordN(Vec<isize>);
+pub struct CoordVec(Vec<isize>);
 
-impl CoordN {
-    pub fn origin(n: usize) -> CoordN {
-        CoordN(vec![0; n])
+impl CoordVec {
+    pub fn origin(n: usize) -> Self {
+        Self(vec![0; n])
     }
 
-    pub fn from_vec(v: Vec<isize>) -> CoordN {
-        CoordN(v)
+    pub fn from_vec(v: Vec<isize>) -> Self {
+        Self(v)
     }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct DeltaN(Vec<isize>);
+pub struct DeltaVec(Vec<isize>);
 
-impl DeltaN {
-    pub fn from_vec(v: Vec<isize>) -> DeltaN {
-        DeltaN(v)
+impl DeltaVec {
+    pub fn from_vec(v: Vec<isize>) -> Self {
+        Self(v)
     }
 }
 
-impl<'a, 'b> Add<&'b DeltaN> for &'a CoordN {
-    type Output = CoordN;
+impl<'a, 'b> Add<&'b DeltaVec> for &'a CoordVec {
+    type Output = CoordVec;
 
-    fn add(self, rhs: &'b DeltaN) -> Self::Output {
+    fn add(self, rhs: &'b DeltaVec) -> Self::Output {
         let n = self.0.len();
         assert_eq!(n, rhs.0.len());
         let res: Vec<_> = (0..n).map(|i| self.0[i] + rhs.0[i]).collect();
-        CoordN(res)
+        CoordVec(res)
     }
 }
 
-impl<'a> AddAssign<&'a DeltaN> for CoordN {
-    fn add_assign(&mut self, rhs: &'a DeltaN) {
+impl<'a> AddAssign<&'a DeltaVec> for CoordVec {
+    fn add_assign(&mut self, rhs: &'a DeltaVec) {
         *self = &*self + rhs;
     }
 }
 
-impl<'a, 'b> Add<&'b DeltaN> for &'a DeltaN {
-    type Output = DeltaN;
+impl<'a, 'b> Add<&'b DeltaVec> for &'a DeltaVec {
+    type Output = DeltaVec;
 
-    fn add(self, rhs: &'b DeltaN) -> Self::Output {
+    fn add(self, rhs: &'b DeltaVec) -> Self::Output {
         let n = self.0.len();
         assert_eq!(n, rhs.0.len());
         let res: Vec<_> = (0..n).map(|i| self.0[i] + rhs.0[i]).collect();
-        DeltaN(res)
+        DeltaVec(res)
     }
 }
 
-impl<'a> AddAssign<&'a DeltaN> for DeltaN {
-    fn add_assign(&mut self, rhs: &'a DeltaN) {
+impl<'a> AddAssign<&'a DeltaVec> for DeltaVec {
+    fn add_assign(&mut self, rhs: &'a DeltaVec) {
         *self = &*self + rhs;
     }
 }
