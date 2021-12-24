@@ -5,3 +5,4 @@ pub mod grid;
 pub mod intcode;
 pub mod num;
 pub mod parse;
+pub mod vec;
