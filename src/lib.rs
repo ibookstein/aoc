@@ -4,3 +4,4 @@ pub mod digits;
 pub mod grid;
 pub mod intcode;
 pub mod num;
+pub mod parse;

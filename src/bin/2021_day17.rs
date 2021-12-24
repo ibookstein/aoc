@@ -1,6 +1,7 @@
 use aoc::{
     aoc_input::get_input,
     coordinates::{Coord, Delta},
+    parse::parse_prefix_and_split,
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -11,31 +12,10 @@ struct TargetArea {
     ymax: isize,
 }
 
-fn iter_two_items<T>(mut iter: impl Iterator<Item = T>) -> Result<(T, T), &'static str> {
-    let first = iter.next().ok_or("Iter first error")?;
-    let second = iter.next().ok_or("Iter second error")?;
-    if iter.next().is_some() {
-        return Err("Too many items");
-    }
-    Ok((first, second))
-}
-
-fn parse_prefix_and_split_two<'a>(
-    s: &'a str,
-    prefix: &str,
-    split_pat: &str,
-) -> Result<(&'a str, &'a str), &'static str> {
-    if !s.starts_with(prefix) {
-        return Err("Invalid prefix");
-    }
-
-    iter_two_items(s[prefix.len()..].split(split_pat))
-}
-
 fn parse_target_area(input: &str) -> Result<TargetArea, &'static str> {
-    let (x_str, y_str) = parse_prefix_and_split_two(input, "target area: ", ", ")?;
-    let (xmin_str, xmax_str) = parse_prefix_and_split_two(x_str, "x=", "..")?;
-    let (ymin_str, ymax_str) = parse_prefix_and_split_two(y_str, "y=", "..")?;
+    let [x_str, y_str] = parse_prefix_and_split(input, "target area: ", ", ")?;
+    let [xmin_str, xmax_str] = parse_prefix_and_split(x_str, "x=", "..")?;
+    let [ymin_str, ymax_str] = parse_prefix_and_split(y_str, "y=", "..")?;
 
     let xmin: isize = xmin_str.parse().or(Err("Failed parsing xmin"))?;
     let xmax: isize = xmax_str.parse().or(Err("Failed parsing xmax"))?;
