@@ -18,6 +18,13 @@ pub fn iter_consume_exact<T, const N: usize>(
     Ok(unsafe { data.assume_init() })
 }
 
+pub fn split_exact<'a, const N: usize>(
+    s: &'a str,
+    pat: &str,
+) -> Result<[&'a str; N], &'static str> {
+    iter_consume_exact(s.split(pat))
+}
+
 pub fn parse_prefix_and_split<'a, const N: usize>(
     s: &'a str,
     prefix: &str,
