@@ -286,14 +286,13 @@ where
 
 impl<T> Display for Grid<T>
 where
-    T: Clone,
-    char: From<T>,
+    T: Clone + Into<char>,
 {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
         for y in 0..self.height() as isize {
             for x in 0..self.width() as isize {
                 let e = self.get(Coord(x, y)).unwrap();
-                fmt.write_char(char::from(e.clone()))?;
+                fmt.write_char(e.clone().into())?;
             }
             fmt.write_char('\n')?;
         }
