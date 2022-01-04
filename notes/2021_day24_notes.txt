@@ -1,0 +1,63 @@
+fn f(x: i64, v: i64, c: i64, d: i64) = {
+  let y = (x != ((v % 26) + c)) as i64;
+  (25y + 1) * v + (x + d) * y
+}
+
+fn g(x: i64, v: i64, c: i64, d: i64) -> i64 {
+  let y = (x != ((v % 26) + c)) as i64;
+  (25y + 1) * (v / 26) + (x + d) * y
+}
+
+if   y == 0 aka x == (v % 26) + c:
+  f = v
+  g = v / 26
+else y == 1 aka x != (v % 26) + c:
+  f = 26v + x + d
+  g = 26 * (v / 26) + x + d = v - v % 26 + x + d
+
+
+first round looks like some sort of init:
+  emits x + 9 to next round (because x != 15)
+
+Input0:  f(c = 15,  d = 9, v = 0)
+Input1:  f(c = 11,  d = 1)
+Input2:  f(c = 10,  d = 11)
+Input3:  f(c = 12,  d = 3)
+Input4:  g(c = -11, d = 10)
+Input5:  f(c = 11,  d = 5)
+Input6:  f(c = 14,  d = 0)
+Input7:  g(c = -6,  d = 7)
+Input8:  f(c = 10,  d = 9)
+Input9:  g(c = -6,  d = 15)
+Input10: g(c = -6,  d = 4)
+Input11: g(c = -16, d = 10)
+Input12: g(c = -4,  d = 4)
+Input13: g(c = -2,  d = 9)
+
+Whenever round n had y = 1, round n + 1 compares
+x_{n+1} ?= x_n + d_n + c_{n+1}.
+Because 1 <= x_i <= 9, we have:
+1 + d_n + c_{n+1} <= x_n + d_n + c_{n+1} <= 9 + d_n + c_{n+1}.
+
+Whenever round n had y = 0, round n + 1 compares
+x_{n+1} ?= (v_n | v_n / 26) % 26 + c_{n + 1}.
+
+If we treat the whole thing as arithmetic base-26:
+* f(y = 0) is identity
+* f(y = 1) is push-bottom-digit (always positive, with bias)
+* g(y = 0) is pop-bottom-digit
+* g(y = 1) is replace-bottom-digit (always positive, with bias)
+
+The decision taken at each round (value of y) is dependent on the bottom digit
+from the previous round's output, the baked-in constant c_i, and the current
+round's input digit. Whenever that c_i is positive and large enough, the value
+of y cannot be set to 0 (because 1 <= x_i <= 9), so either Push or Replace will
+be used.
+
+Because Identity leaves us with the same amount of digits, and Replace leaves
+us with either the same amount of digits or one more (when transitioning from
+zero to nonzero), every Push (and nonzero Replace) must be balanced with a Pop.
+
+Wherever Identity or Pop are used, the x_i + d itself is discarded, but note
+that a specific value of x_i had to be picked to trigger that choice in the
+first place.
